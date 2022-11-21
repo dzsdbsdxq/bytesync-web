@@ -1,9 +1,9 @@
 import Fly from 'flyio/dist/npm/fly';
+import {config} from "@/utils/const";
 const fly = new Fly();
 
-const APP_API = process.env.NODE_ENV === 'development' ? 'http://172.30.19.30:8009/' :  '/' ;
 // 设置请求基地址
-fly.config.baseURL = `${APP_API}`;
+fly.config.baseURL = config.http.url;
 
 // 添加请求拦截器
 fly.interceptors.request.use((request) => {

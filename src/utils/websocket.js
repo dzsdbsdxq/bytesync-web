@@ -1,5 +1,7 @@
 import {utils} from "@/utils/func";
 import store from '@/store'
+import {config} from "@/utils/const";
+import {getCurrentInstance} from "vue";
 export default class SocketService {
     static instance = null;
     static get Instance(){
@@ -19,14 +21,13 @@ export default class SocketService {
     // 重新连接尝试的次数
     connectRetryCount = 0;
     //  定义连接服务器的方法
-    connect(roomId,userId){
+    connect(roomId,userId,type){
         let that = this;
         //连接服务器
         if (!window.WebSocket) {
             return console.log("您的浏览器不支持WebSocket");
         }
-       // let url = "wss://qcloud-ws.haoba.cc/acc?secret="+secret + "&appid=web_"+appid+"&platform=web";
-        let url = "ws://172.30.19.30:8010/acc?roomId="+roomId + "&userId="+userId+"&platform=pc";
+        let url = config.websocket.url+"?roomId="+roomId + "&userId="+userId+"&platform=pc&type="+type;
         this.ws = new WebSocket(url);
         // 连接成功的事件
         this.ws.onopen = () => {
@@ -46,6 +47,7 @@ export default class SocketService {
             console.log('连接服务端失败');
             this.connected = false;
             this.connectRetryCount++;
+            this.setStatus(false,"","");
             setTimeout(() => {
                 this.connect(roomId,userId);
             }, 500 * this.connectRetryCount);
@@ -59,26 +61,27 @@ export default class SocketService {
                 case "login":
                     if(msgData.response.code == 200){
                         //如果登录成功，设置缓存登录信息
-                        store.dispatch("setIsConnectAction", true).then(r =>{});
-                        store.dispatch("setUserIdAction", userId).then(r =>{});
-                        store.dispatch("setRoomIdAction", roomId).then(r =>{});
+                        this.setStatus(true,userId,roomId);
                     }
                     break;
                 case "heartbeat":
+                    let connect = false;
+
+                    if (msgData.response.code == 200){
+                        connect = true;
+                    }
+                    this.setStatus(connect,msgData.response.data.userId,msgData.response.data.roomId);
                     break;
                 case "msg":
                     if (msgData.response.code == 200){
                         //msgData.response.data
-
+                        //WangEditor
+                        config.editor.setHtml(msgData.response.data.msg);
                     }
                     break;
                 case "close":
-                    if (msgData.response.code == 200){
-                        store.dispatch("setIsConnectAction", false).then(r =>{});
-                        store.dispatch("setUserIdAction", "").then(r =>{});
-                        store.dispatch("setRoomIdAction", "").then(r =>{});
-                        location.reload();
-                    }
+                    console.log("服务关闭啦");
+                    this.setStatus(false,"","");
                     break;
                 default:
 
@@ -94,6 +97,11 @@ export default class SocketService {
     // 取消某一个回调函数
     unRegisterCallBack(socketType) {
         this.callBackMapping[socketType] = null;
+    }
+    setStatus(connect,userId,roomId){
+        store.dispatch("setIsConnectAction", connect).then(r =>{});
+        store.dispatch("setUserIdAction", userId).then(r =>{});
+        store.dispatch("setRoomIdAction", roomId).then(r =>{});
     }
 
     // 发送数据的方法

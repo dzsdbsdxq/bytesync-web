@@ -12,7 +12,6 @@ import {useStore} from "vuex";
 import {computed} from "vue";
 import {useRoute} from "vue-router";
 const { params } = useRoute();
-console.log("params:",params.code);
 const store = useStore();
 const isConnect = computed({
   get() {

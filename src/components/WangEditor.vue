@@ -30,13 +30,17 @@
 <script setup>
 import { onBeforeUnmount, ref, shallowRef, onMounted } from 'vue'
 import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
-import '@wangeditor/editor/dist/css/style.css' // 引入 css
+import '@wangeditor/editor/dist/css/style.css'
+import {config} from "@/utils/const";
+import {fly} from "@/utils/request";
+
+import {useStore} from "vuex";
+import {utils} from "@/utils/func"; // 引入 css
 // 编辑器实例，必须用 shallowRef
 const editorRef = shallowRef()
-
+const store = useStore();
 // 内容 HTML
 const valueHtml = ref('<p></p>')
-
 
 onMounted(() => {
   //console.log(Toolbar.getConfig().toolbarKeys);
@@ -53,7 +57,21 @@ const editorConfig = { placeholder: '请输入内容...',autoFocus:true, scroll:
 const onEditorContentChange = (editor) => {   // TS 语法
 // editorConfig.onChange = (editor) => {            // JS 语法
   // editor changed
-  console.log('content', editor.getHtml())
+  //console.log('content', editor.getHtml())
+  /*
+  let roomId = store.getters.getRoomId;
+  let userId = store.getters.getUserId;
+  let msgId = utils.getContentId(editorRef.value.getHtml());
+  fly.post("api/sendData",{roomId:roomId,userId:userId,msgId:msgId,content:editorRef.value.getHtml()}).then( res => {
+    console.log(res);
+    if(res.code == 200){
+
+    }
+  }).catch(err => {
+    // toaster.error(err.message);
+  })
+  */
+
 }
 // 组件销毁时，也及时销毁编辑器
 onBeforeUnmount(() => {
@@ -65,11 +83,34 @@ onBeforeUnmount(() => {
 const getEditorHtml = () => {
     return editorRef.value.getHtml();
 }
+const setEditorHtml = () => {
+  console.log("setEditorHtml");
+}
 
 const handleCreated = (editor) => {
   editorRef.value = editor // 记录 editor 实例，重要！
+
+  config.editor = editor
+  editor.getEditableContainer().addEventListener("keydown",function (e) {
+    if(e.keyCode == 13){
+      let roomId = store.getters.getRoomId;
+      let userId = store.getters.getUserId;
+      let msgId = utils.getContentId(editorRef.value.getHtml() + utils.getRandomData());
+      fly.post("api/sendData",{roomId:roomId,userId:userId,msgId:msgId,content:editorRef.value.getHtml()}).then( res => {
+        console.log(res);
+        if(res.code == 200){
+
+        }
+      }).catch(err => {
+        // toaster.error(err.message);
+      })
+    }
+  })
 }
-defineExpose({getEditorHtml})
+onMounted(()=>{
+
+})
+defineExpose({getEditorHtml,setEditorHtml})
 </script>
 
 <style scoped lang="less">

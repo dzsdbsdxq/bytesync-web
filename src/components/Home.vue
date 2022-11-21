@@ -3,7 +3,7 @@
     <div class="container">
       <h1><span style="color:#E30A35FF">B</span>yte<span style="color: #e30a35">S</span>ync</h1>
       <div class="line-t-30"></div>
-      <h2>端到端在线文本分享服务。分享更私密，真正做到无痕迹。</h2>
+      <h2>端到端实时在线文本分享服务。分享更私密，真正做到无痕迹。</h2>
       <div class="line-t-50"></div>
       <button class="create" @click="createRoomFunc">创&nbsp;&nbsp;建</button>
       <div class="line-t-20"></div>
@@ -44,16 +44,13 @@ const roomId = ref("")
 
 const createRoomFunc = () => {
   fly.post("api/newPcConnect",{}).then( res => {
-    console.log(res);
     if(res.code == 200){
-      //store.dispatch("setIsConnectAction",true);
       //返回成功，进行websoket连接登录
-      SocketService.Instance.connect(res.data.roomId,res.data.userId);
+      SocketService.Instance.connect(res.data.roomId,res.data.userId,"create");
     }
   }).catch(err => {
     console.log(err);
   })
-  //store.dispatch("setIsConnectAction",true);
 }
 
 const joinRoomFunc = () => {
